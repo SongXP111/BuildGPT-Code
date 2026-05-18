@@ -219,7 +219,7 @@ class GPTLanguageModel(nn.Module):
         self.blocks = nn.Sequential(*[Block(n_embd, n_head) for _ in range(n_layer)])
         
         # 4. 最终的层归一化 (Final Layer Normalization)
-        self.ln = nn.LayerNorm(n_embd) 
+        self.ln = nn.LayerNorm(n_embd)
         
         # 5. 语言模型头 (Language Model Head)：最后的线性层，将特征向量映射回词汇表大小 (vocab_size)
         # 用于输出每个词对应的对数概率 (logits)
