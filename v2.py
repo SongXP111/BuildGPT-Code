@@ -92,9 +92,12 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, head_size):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.proj = nn.Linear(n_embd, n_embd)
 
     def forward(self, x):
-        return torch.cat([h(x) for h in self.heads], dim=-1)
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = self.proj(out)
+        return out
 
 class FeedForward(nn.Module):
     """
@@ -121,8 +124,8 @@ class Block(nn.Module):
         self.ffn = FeedForward(n_embd)
 
     def forward(self, x):
-        x = self.sa(x)
-        x = self.ffn(x)
+        x = x + self.sa(x) # Residual connection after self-attention
+        x = x + self.ffn(x) # Residual connection after FFN
         return x
 
 # super simple bigram model
