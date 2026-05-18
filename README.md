@@ -625,3 +625,38 @@ Dropout 在训练时，**每次前向传播随机将 20%（dropout=0.2）的神�
 
 **注意**：Dropout 只在训练时生效。推理/生成时（`model.eval()`），Dropout 会自动关闭，使用完整的网络。
 
+---
+
+### Q9: 6 个 Block 是并行的还是串行的？模型一共有多少个 Head？
+
+**核心问题**：Block 之间的数据流是怎样的？
+
+**回答**：
+
+6 个 Block 是**串行（Sequential）**的，数据依次通过每一层：
+
+```
+输入 x → Block 1 → Block 2 → Block 3 → Block 4 → Block 5 → Block 6 → 输出
+```
+
+代码中使用的 `nn.Sequential` 就决定了这一点——前一层的输出是下一层的输入。
+
+但在每个 Block **内部**，6 个注意力头（Head）是**并行**的，各自独立处理同一份输入，最后拼接结果。
+
+所以模型一共有 **6 × 6 = 36 个 Head**，每个 Head 都有独立的 Q、K、V 参数：
+
+```
+Block 1:  [Head_1,  Head_2,  Head_3,  Head_4,  Head_5,  Head_6 ]  ← 并行
+    ↓ 串行
+Block 2:  [Head_7,  Head_8,  Head_9,  Head_10, Head_11, Head_12]
+    ↓
+Block 3:  [Head_13 ... Head_18]
+    ↓
+Block 4:  [Head_19 ... Head_24]
+    ↓
+Block 5:  [Head_25 ... Head_30]
+    ↓
+Block 6:  [Head_31 ... Head_36]
+```
+
+浅层的 Head 倾向于学到简单的局部模式（如字母搭配），深层的 Head 会基于前面已经加工过的特征，学到更复杂的长距离语义依赖。
